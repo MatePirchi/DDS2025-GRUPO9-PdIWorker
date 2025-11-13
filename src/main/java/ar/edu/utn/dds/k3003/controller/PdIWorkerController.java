@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/")
 public class PdIWorkerController {
     private final PdIWorker fachada;
-    @Value("urlPdI:http://localhost")
+    @Value("${pdi.url}")
     private String urlPdI;
+
+    @Value("${propia.url}")
+    private String urlPropia;
 
     private String lastUrl = null;
     private PdIProxy pdiProxy = null;
@@ -48,7 +51,9 @@ public class PdIWorkerController {
             lastUrl = urlProxy;
         }
 
-        if (!pdiProxy.anunciarse()){
+        if (!pdiProxy.anunciarse(urlPropia)){
+            pdiProxy = null;
+            lastUrl = null;
             return ResponseEntity.internalServerError().body("Fallo al anunciarse");
         }
 

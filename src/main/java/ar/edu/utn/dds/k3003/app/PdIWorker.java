@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class PdIWorker {
     @Getter
     private final PdIRepository pdiRepository;
+
+
     @Autowired
     private MetricsConfig metrics;
     @Autowired
