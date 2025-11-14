@@ -137,6 +137,13 @@
       <artifactId>spring-boot-starter-aop</artifactId>
     </dependency>
 
+      <!-- https://mvnrepository.com/artifact/com.rabbitmq/amqp-client -->
+      <dependency>
+          <groupId>com.rabbitmq</groupId>
+          <artifactId>amqp-client</artifactId>
+          <version>5.17.0</version>
+      </dependency>
+
   </dependencies>
 
   <build>
@@ -188,11 +195,6 @@
         <configuration>
           <excludeFilterFile>.code_config/spotbugs-exclude.xml</excludeFilterFile>
         </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
 
       <plugin>
