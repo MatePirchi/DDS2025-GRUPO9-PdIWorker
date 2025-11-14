@@ -25,9 +25,6 @@ public class deliveryHandler {
     @Value("${rabbitmq.queue.name:pdis.queue}")
     private String queueName;
     
-    @Value("${rabbitmq.enabled:true}")
-    private boolean rabbitmqEnabled;
-    
     private Connection connection;
     private Channel channel;
 
@@ -40,10 +37,6 @@ public class deliveryHandler {
 
     @PostConstruct
     public void init() {
-        if (!rabbitmqEnabled) {
-            System.out.println("RabbitMQ está deshabilitado. No se conectará.");
-            return;
-        }
         
         try {
             connection = connectionFactory.newConnection();
