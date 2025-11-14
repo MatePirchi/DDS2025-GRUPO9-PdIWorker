@@ -5,9 +5,12 @@ import ar.edu.utn.dds.k3003.config.MetricsConfig;
 import ar.edu.utn.dds.k3003.model.PdI;
 import ar.edu.utn.dds.k3003.repository.InMemoryPdIRepo;
 import ar.edu.utn.dds.k3003.repository.PdIRepository;
+import io.micrometer.core.instrument.Timer;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class PdIWorker {
     @Getter
     private final PdIRepository pdiRepository;
@@ -29,6 +32,11 @@ public class PdIWorker {
     }
 
     public void poner_a_procesar(PdI pdi){
+        Timer.Sample tiempoProc = metrics.startTimer();
+
         procesador.procesar(pdi, this.pdiRepository);
+
+        metrics.guardarTiempoDeProc(tiempoProc);
+        this.metrics.incPdisProc();
     }
 }

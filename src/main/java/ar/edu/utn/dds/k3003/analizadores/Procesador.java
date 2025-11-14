@@ -1,5 +1,7 @@
 package ar.edu.utn.dds.k3003.analizadores;
 import ar.edu.utn.dds.k3003.config.MetricsConfig;
+import ar.edu.utn.dds.k3003.exceptions.comunicacionexterna.ApiLayerException;
+import ar.edu.utn.dds.k3003.exceptions.comunicacionexterna.OCRspaceException;
 import ar.edu.utn.dds.k3003.model.PdI;
 import ar.edu.utn.dds.k3003.repository.PdIRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,11 +32,8 @@ public class Procesador {
         if (!this.seDebeGuardar(nuevoPdI, pdiRepository)) {
             return;
         }
-
-
         if (nuevoPdI.getUrlImagen() != null &&(nuevoPdI.getTextoImagen() == null || nuevoPdI.getEtiquetas().isEmpty())) {
             this.iniciarWorkers(nuevoPdI);
-            metrics.incPdisProc();
         }
 
         pdiRepository.save(nuevoPdI);
@@ -43,7 +42,6 @@ public class Procesador {
                         + nuevoPdI.getId()
                         + " en hechoId: "
                         + nuevoPdI.getHechoId());
-
     }
 
     public void iniciarWorkers(PdI pdi) {
@@ -59,7 +57,12 @@ public class Procesador {
                 resultados.add(c.get());
             }
         } catch (InterruptedException | ExecutionException e) {
+            metrics.incError();
             throw new RuntimeException("Error en procesamiento asíncrono, Error: " + e, e);
+        }
+        catch(ApiLayerException | OCRspaceException e ) {
+            metrics.incErrorServicioExterno();
+            throw e;
         }
         int n = resultados.stream().filter(r -> !r).toList().size();
         if(n > 0){
@@ -72,7 +75,6 @@ public class Procesador {
     public CompletableFuture<Boolean> realizarProceso(String urlImagen, ServicioProcesamiento servicio, PdI pdi) {
         Boolean resultado = servicio.procesar(urlImagen, pdi);
         return CompletableFuture.completedFuture(resultado);
-
     }
 
     private boolean seDebeGuardar(PdI nuevoPdI, PdIRepository pdiRepository) {
