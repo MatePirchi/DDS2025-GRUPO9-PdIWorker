@@ -20,33 +20,49 @@ public class deliveryHandler {
 
     private final PdIWorker pdiWorker;
     private final ObjectMapper objectMapper;
-    private final Connection connection;
+    private final ConnectionFactory connectionFactory;
     
     @Value("${rabbitmq.queue.name:pdis.queue}")
     private String queueName;
     
+    @Value("${rabbitmq.enabled:true}")
+    private boolean rabbitmqEnabled;
+    
+    private Connection connection;
     private Channel channel;
 
     @Autowired
-    public deliveryHandler(PdIWorker pdiWorker, ObjectMapper objectMapper, Connection connection) {
+    public deliveryHandler(PdIWorker pdiWorker, ObjectMapper objectMapper, ConnectionFactory connectionFactory) {
         this.pdiWorker = pdiWorker;
         this.objectMapper = objectMapper;
-        this.connection = connection;
+        this.connectionFactory = connectionFactory;
     }
 
     @PostConstruct
-    public void init() throws IOException {
-        channel = connection.createChannel();
-        channel.queueDeclare(queueName, true, false, false, null);
+    public void init() {
+        if (!rabbitmqEnabled) {
+            System.out.println("RabbitMQ está deshabilitado. No se conectará.");
+            return;
+        }
         
-        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String mensaje = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            handleMessage(mensaje);
-            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-        };
-        
-        channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {});
-        System.out.println("Esperando mensajes de RabbitMQ en la cola: " + queueName);
+        try {
+            connection = connectionFactory.newConnection();
+            channel = connection.createChannel();
+            channel.queueDeclare(queueName, true, false, false, null);
+            
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String mensaje = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                handleMessage(mensaje);
+                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+            };
+            
+            channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {});
+            System.out.println("Conectado a RabbitMQ. Esperando mensajes en la cola: " + queueName);
+            
+        } catch (IOException | TimeoutException e) {
+            System.err.println("No se pudo conectar a RabbitMQ: " + e.getMessage());
+            System.err.println("La aplicación continuará sin soporte de mensajería.");
+        }
     }
 
     public void handleMessage(String mensaje) {
@@ -83,8 +99,11 @@ public class deliveryHandler {
             if (channel != null && channel.isOpen()) {
                 channel.close();
             }
+            if (connection != null && connection.isOpen()) {
+                connection.close();
+            }
         } catch (IOException | TimeoutException e) {
-            System.err.println("Error al cerrar el canal de RabbitMQ: " + e.getMessage());
+            System.err.println("Error al cerrar la conexión de RabbitMQ: " + e.getMessage());
         }
     }
 }
