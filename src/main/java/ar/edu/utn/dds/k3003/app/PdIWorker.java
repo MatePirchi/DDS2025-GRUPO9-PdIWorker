@@ -37,6 +37,5 @@ public class PdIWorker {
         procesador.procesar(pdi, this.pdiRepository);
 
         metrics.guardarTiempoDeProc(tiempoProc);
-        this.metrics.incPdisProc();
     }
 }

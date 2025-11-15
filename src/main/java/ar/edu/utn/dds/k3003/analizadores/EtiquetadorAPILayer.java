@@ -2,9 +2,11 @@ package ar.edu.utn.dds.k3003.analizadores;
 
 import ar.edu.utn.dds.k3003.clients.EtiquetadorAPILayerProxy;
 import ar.edu.utn.dds.k3003.clients.dtos.EtiquetadorAPILayerDTO;
+import ar.edu.utn.dds.k3003.config.MetricsConfig;
 import ar.edu.utn.dds.k3003.exceptions.comunicacionexterna.ApiLayerException;
 import ar.edu.utn.dds.k3003.model.PdI;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,8 @@ import java.util.List;
 @Service
 public class EtiquetadorAPILayer implements Etiquetador {
     private final EtiquetadorAPILayerProxy proxy;
+    @Autowired
+    private MetricsConfig metrics;
 
     public EtiquetadorAPILayer(@Value("${apilayer.apikey}") String apiKey) {
         this.proxy = new EtiquetadorAPILayerProxy(new ObjectMapper(), apiKey);
@@ -38,6 +42,7 @@ public class EtiquetadorAPILayer implements Etiquetador {
             etiquetas = obtenerEtiquetas(urlImagen);
         }catch (ApiLayerException e) {
             System.out.println("Error con ApiLayer con url: " + urlImagen);
+            metrics.incErrorServicioExterno();
             return false;
         }
         pdi.setEtiquetas(etiquetas == null ? List.of() : etiquetas);

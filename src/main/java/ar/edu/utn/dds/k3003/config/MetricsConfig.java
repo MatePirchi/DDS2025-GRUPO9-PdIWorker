@@ -51,6 +51,7 @@ public class MetricsConfig {
     }
     public void incErrorServicioExterno(){
         System.out.println("Incrementing errorServicioExterno counter");
+        this.incError();
         incrementCounter("app.errorServicioExterno.total");
     }
 }

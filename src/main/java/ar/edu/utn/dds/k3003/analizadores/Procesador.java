@@ -60,10 +60,7 @@ public class Procesador {
             metrics.incError();
             throw new RuntimeException("Error en procesamiento asíncrono, Error: " + e, e);
         }
-        catch(ApiLayerException | OCRspaceException e ) {
-            metrics.incErrorServicioExterno();
-            throw e;
-        }
+        this.metrics.incPdisProc();
         int n = resultados.stream().filter(r -> !r).toList().size();
         if(n > 0){
             System.out.println("Ocurrio un error en "+ n + " sevicios, guardando los datos que se puedan");

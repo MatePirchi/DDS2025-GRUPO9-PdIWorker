@@ -2,16 +2,20 @@ package ar.edu.utn.dds.k3003.analizadores;
 
 import ar.edu.utn.dds.k3003.clients.OCRSpaceProxy;
 import ar.edu.utn.dds.k3003.clients.dtos.OCRspaceDTO;
+import ar.edu.utn.dds.k3003.config.MetricsConfig;
 import ar.edu.utn.dds.k3003.exceptions.comunicacionexterna.OCRspaceException;
 import ar.edu.utn.dds.k3003.model.PdI;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AnalizadorOCRSpace implements AnalizadorOCR {
 
-    OCRSpaceProxy proxy;
+    private final OCRSpaceProxy proxy;
+    @Autowired
+    private MetricsConfig metrics;
 
     public AnalizadorOCRSpace(@Value("${ocrspace.apikey}") String apiKey) {
         this.proxy = new OCRSpaceProxy(new ObjectMapper(), apiKey);
@@ -39,6 +43,7 @@ public class AnalizadorOCRSpace implements AnalizadorOCR {
             texto = analizarImagenURL(urlImagen);
         }catch (OCRspaceException e) {
             System.out.println("Error con OCRspace con url: " + urlImagen);
+            metrics.incErrorServicioExterno();
             return false;
         }
         pdi.setTextoImagen(texto == null ? "" : texto);
